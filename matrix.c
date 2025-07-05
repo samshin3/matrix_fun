@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <assert.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include "matrix.h"
 
 // defining a structure for the matrix to store all values for easy traversal of matrix
 struct matrix {
@@ -47,6 +44,7 @@ struct matrix *matrix_multiply(struct matrix *m1, struct matrix *m2) {
 
 // function to print a given matrix with borders
 void print_matrix(struct matrix *grid) {
+    assert(grid);
     for (int row = 0; row < grid->m; row++) {
         printf("|");
         for (int col = 0; col < grid->n; col++) {
@@ -56,37 +54,21 @@ void print_matrix(struct matrix *grid) {
     }
 }
 
+// calls user input to fill in the matrix given
+void fill_matrix(struct matrix *grid) {
+    for (int row = 0; row < grid->m; row++) {
+        for (int col = 0; col < grid->n; col++) {
+            scanf("%d", &(grid->vals[row][col]));
+        }
+    }
+}
+
 // call function to destroy a matrix
 void destroy_matrix(struct matrix *grid) {
+    assert(grid);
     for (int rows = 0; rows < grid->m; rows++) {
         free(grid->vals[rows]);
     }
     free(grid->vals);
     free(grid);
-}
-
-// test values run
-int main(void) {
-    struct matrix * my_matrix = create_matrix(2, 2);
-    my_matrix->vals[0][0] = 1;
-    my_matrix->vals[0][1] = 2;
-    my_matrix->vals[1][0] = 3;
-    my_matrix->vals[1][1] = 4;
-
-    struct matrix *m2 = create_matrix(2, 2);
-    m2->vals[0][0] = 1;
-    m2->vals[0][1] = 2;
-    m2->vals[1][0] = 3;
-    m2->vals[1][1] = 4;    
-    print_matrix(my_matrix);
-    printf("\n");
-    print_matrix(m2);
-    printf("\n");
-
-    struct matrix *product = matrix_multiply(my_matrix, m2);
-    print_matrix(product);
-
-    destroy_matrix(my_matrix);
-    destroy_matrix(m2);
-    destroy_matrix(product);
 }
