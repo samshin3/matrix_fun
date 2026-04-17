@@ -15,11 +15,9 @@ int main(void) {
     fill_matrix(m2);
 
     print_matrix(m1);
-    printf("\n");
     print_matrix(m2);
-    printf("\n");
 
-    struct matrix *product = matrix_multiply(m1, m2);
+    struct matrix *product = linear_reg(m1, m2);
     print_matrix(product);
 
     destroy_matrix(m1);
