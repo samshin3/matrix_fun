@@ -1,23 +1,43 @@
 #include "matrix.h"
 #include <assert.h>
+#include <math.h>
 
 // defining a structure for the matrix to store all values for easy traversal of matrix
 struct matrix {
-    int m;
-    int n;
-    float **vals;
+    	int m;
+    	int n;
+    	float **vals;
 };
 
 // allocates memory for an m x n matrix
 struct matrix *create_matrix(int m, int n) {
-    struct matrix *new_matrix = malloc(sizeof(struct matrix));
-    new_matrix->m = m;
-    new_matrix->n = n;
-    new_matrix->vals = malloc(sizeof(int *) * new_matrix->m);
-    for (int i = 0; i < new_matrix->m; i++) {
-        new_matrix->vals[i] = malloc(sizeof(int) * new_matrix->n);
-    }
-    return new_matrix;
+    	struct matrix *new_matrix = malloc(sizeof(struct matrix));
+
+    	new_matrix->m = m;
+    	new_matrix->n = n;
+    	new_matrix->vals = malloc(sizeof(int *) * new_matrix->m);
+
+    	for (int i = 0; i < new_matrix->m; i++) {
+        	new_matrix->vals[i] = malloc(sizeof(int) * new_matrix->n);
+    	}
+    	return new_matrix;
+}
+
+
+int *matrix_shape(struct matrix *mat) {
+	assert(mat);
+	int *shape = malloc(sizeof(int) * 2);
+	shape[0] = mat->m;
+	shape[1] = mat->n;
+	return shape;
+}
+
+int get_value(struct matrix *mat, int row, int col) {
+	assert(mat);
+	assert(row >= 0 && row <= mat->m);
+	assert(col >= 0 && col <= mat->n);
+
+	return mat->vals[row][col];
 }
 
 
@@ -25,72 +45,116 @@ struct matrix *create_matrix(int m, int n) {
 // two matrices are valid if the number of columns in m1 are the same as 
 // the number of rows in m2
 struct matrix *matrix_multiply(struct matrix *m1, struct matrix *m2) {
-    assert(m1->n == m2->m);
-    struct matrix *result = create_matrix(m1->m, m2->n);
-    for (int row = 0; row < result->m; row++) {
-        for (int col = 0; col < result->n; col++) {
-            result->vals[row][col] = 0;
-        }
-    }
+    	assert(m1->n == m2->m);
 
-    for (int row = 0; row < m1->m; row++) {
-        for (int col = 0; col < m2->n; col++) {
-            for (int i = 0; i < m1->n; i++) {
-                result->vals[row][col] += m1->vals[row][i] * m2->vals[i][col];
-            }
+    	struct matrix *result = create_matrix(m1->m, m2->n);
+    	for (int row = 0; row < result->m; row++) {
+        	for (int col = 0; col < result->n; col++) {
+                	result->vals[row][col] = 0;
+        	}
         }
-    }
-    return result;
+
+        for (int row = 0; row < m1->m; row++) {
+            	for (int col = 0; col < m2->n; col++) {
+                	for (int i = 0; i < m1->n; i++) {
+                    		result->vals[row][col] += m1->vals[row][i] * m2->vals[i][col];
+                	}
+            	}
+	}
+        return result;
 }
 
 // function to print a given matrix with borders
 void print_matrix(struct matrix *grid) {
-    assert(grid);
-    for (int row = 0; row < grid->m; row++) {
-        printf("|");
-        for (int col = 0; col < grid->n; col++) {
-            printf("%f ", grid->vals[row][col]);
-        }
-        printf("|\n");
-    }
-    printf("\n");
+	assert(grid);
+	for (int row = 0; row < grid->m; row++) {
+		printf("|");
+        
+		for (int col = 0; col < grid->n; col++) {
+        		printf("%f ", grid->vals[row][col]);
+        	}
+        	printf("|\n");
+    	}
+
+	printf("\n");
 }
 
 // calls user input to fill in the matrix given
 void fill_matrix(struct matrix *grid) {
-    for (int row = 0; row < grid->m; row++) {
-        for (int col = 0; col < grid->n; col++) {
-            scanf("%f", &(grid->vals[row][col]));
+        for (int row = 0; row < grid->m; row++) {
+            	for (int col = 0; col < grid->n; col++) {
+                	scanf("%f", &(grid->vals[row][col]));
+        	}
         }
-    }
 }
 
 // call function to destroy a matrix
 void destroy_matrix(struct matrix *grid) {
-    assert(grid);
-    for (int rows = 0; rows < grid->m; rows++) {
-        free(grid->vals[rows]);
-    }
-    free(grid->vals);
-    free(grid);
+	assert(grid);
+        for (int rows = 0; rows < grid->m; rows++) {
+            	free(grid->vals[rows]);
+        }
+        free(grid->vals);
+        free(grid);
 }
 
 float det(struct matrix *mat) {
 	assert(mat);
-	assert(mat->m <= 2);
-	assert(mat->n <= 2);
+	assert(mat->m == mat->n);
 
+	float **values = mat->vals;
+	// determinant of a 1x1 is itself
 	if (mat->m == 1) {
-		return mat->vals[0][0]; // first and only entry in the matrix;
+		return values[0][0]; // first and only entry in the matrix;
 	}
+	// second base case
+	if (mat->m == 2) {
+		return (values[0][0] * values[1][1]) - (values[0][1] * values[1][0]);
+	}
+	
+	float determinant = 0;
+	
+	for (int i = 0; i < mat->n; i++) {
+		struct matrix *minor = minor_matrix(mat, 0, i);
+		int sign = pow(-1, i + 2);
+		float cofactor = det(minor) * mat->vals[0][i] * sign;
+		determinant += cofactor;
+		destroy_matrix(minor);
+	}
+	return determinant;
+}
 
-	float a = mat->vals[0][0];
-	float b = mat->vals[0][1];
-	float c = mat->vals[1][0];
-	float d = mat->vals[1][1];
+struct matrix *minor_matrix(struct matrix *mat, int i, int j) {
+	assert(mat);
+	assert(mat->m == mat->n);
+	
+	struct matrix *minor = create_matrix(mat->m - 1, mat->n - 1);
+	float *values = malloc(sizeof(float) * minor->m);
+	int index = 0;
+	
+	// Traverse mat
+	for (int row = 0; row < mat->m; row++) {
+		for (int col = 0; col < mat->n; col++) {
+			if (row == i || col == j) {
+				continue;
+			}
 
-	return (a * d) - (b * c);
-
+			values[index] = mat->vals[row][col];
+			index++;
+		}
+	}
+	
+	index = 0;
+	
+	for (int min_row = 0; min_row < minor->m; min_row++) {
+		for (int min_col = 0; min_col < minor->n; min_col++) {
+			minor->vals[min_row][min_col] = values[index];
+			index++;
+		}
+	}
+	
+	free(values);
+	return minor;
 }
 
 void scalar_multiply(struct matrix *mat, float scalar) {
@@ -106,27 +170,12 @@ void scalar_multiply(struct matrix *mat, float scalar) {
 
 struct matrix *invert_matrix(struct matrix *mat) {
 	assert(mat);
-	assert(mat->m == 2);
-	assert(mat->n == 2);
-
 	float determinant = det(mat);
-
 	assert(determinant != 0);
 
-	float a = mat->vals[0][0];
-	float b = mat->vals[0][1];
-	float c = mat->vals[1][0];
-	float d = mat->vals[1][1];	
-
-	struct matrix * inverted = create_matrix(2, 2);
-
-	inverted->vals[0][0] = d;
-	inverted->vals[0][1] = -b;
-	inverted->vals[1][0] = -c;
-	inverted->vals[1][1] = a;
-
+	struct matrix *inverted = adj(mat);	
 	scalar_multiply(inverted, (float) 1 / determinant);
-
+	
 	return inverted;
 }
 
@@ -141,6 +190,8 @@ struct matrix *transpose(struct matrix *mat) {
 
 	return new_matrix;
 }
+
+
 
 struct matrix *linear_reg(struct matrix *x, struct matrix *y) {
 	assert(x->m == y->m);
@@ -168,5 +219,27 @@ struct matrix *linear_reg(struct matrix *x, struct matrix *y) {
 	destroy_matrix(xTy);
 
 	return coefficients;
+
+}
+
+struct matrix *adj(struct matrix *mat) {
+	assert(mat);
+	assert(mat->m == mat->n);
+	
+	struct matrix *cof_matrix = create_matrix(mat->m, mat->n);
+	
+	for (int i = 0; i < cof_matrix->m; i++) {
+		for(int j = 0; j < cof_matrix->n; j++) {
+			struct matrix *minor = minor_matrix(mat, i, j);
+			int sign = pow(-1, i + j + 2);
+			cof_matrix->vals[i][j] = sign * det(minor);
+			destroy_matrix(minor);
+		}
+	}
+
+	struct matrix *adjunct = transpose(cof_matrix);
+	destroy_matrix(cof_matrix);
+
+	return adjunct;
 
 }

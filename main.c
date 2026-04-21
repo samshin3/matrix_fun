@@ -1,26 +1,30 @@
 #include "matrix.h"
+#include <stdio.h>
 
 int main(void) {
-    int m = 0;
-    int n = 0;
+	int rows;
+	int cols;
 
-    scanf("%d", &m);
-    scanf("%d", &n);
-    struct matrix * m1 = create_matrix(m, n);
-    fill_matrix(m1);
+	// read matrix shape
+	scanf("%d", &rows);
+	scanf("%d", &cols);
 
-    scanf("%d", &m);
-    scanf("%d", &n);    
-    struct matrix *m2 = create_matrix(m, n);
-    fill_matrix(m2);
+	struct matrix *m1 = create_matrix(rows, cols);
+	fill_matrix(m1);
 
-    print_matrix(m1);
-    print_matrix(m2);
+	scanf("%d", &rows);
+	scanf("%d", &cols);
 
-    struct matrix *product = linear_reg(m1, m2);
-    print_matrix(product);
+	struct matrix *m2 = create_matrix(rows, cols);
+	fill_matrix(m2);	
 
-    destroy_matrix(m1);
-    destroy_matrix(m2);
-    destroy_matrix(product);
+	print_matrix(m1);
+	print_matrix(m2);
+
+	struct matrix *value_vector = linear_reg(m1, m2);
+	print_matrix(value_vector);
+
+	destroy_matrix(m1);
+	destroy_matrix(m2);
+	destroy_matrix(value_vector);
 }
